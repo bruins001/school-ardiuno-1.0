@@ -9,9 +9,18 @@ AF_DCMotor rightBackMotor(4);
 
 HUSKYLENS huskylens;
 SoftwareSerial mySerial(9, 10); // RX, TX
-int stopLichtRoodId = 1;
+int trafficLightRedId = 1;
+int roundaboutId = 2;
+
+int motorSpeedForward = 100;
+int motorSpeedBrake = 0;
 
 int get_distance_sonic();
+void driveForward();
+void driveBrake();
+void driveRoundabout();
+void driveTurnRight();
+void driveTurnLeft();
 
 void setup() {
   // put your setup code here, to run once:
@@ -29,51 +38,28 @@ void setup() {
 }
 
 void loop() {
-  int motorSpeedForward = 200;
-  int motorSpeedBrake = 0;
-
   if (!huskylens.request()) Serial.println(F("Fail to request data from HUSKYLENS, recheck the connection!"));
   else
   {
       while (huskylens.available())
       {
           HUSKYLENSResult result = huskylens.read();
-          if (result.ID == stopLichtRoodId) {
-            // Stopt voertuig
-            leftFrontMotor.setSpeed(motorSpeedBrake);
-            leftFrontMotor.run(RELEASE);
-            leftBackMotor.setSpeed(motorSpeedBrake);
-            leftBackMotor.run(RELEASE);
-            rightFrontMotor.setSpeed(motorSpeedBrake);
-            rightFrontMotor.run(RELEASE);
-            rightBackMotor.setSpeed(motorSpeedBrake);
-            rightBackMotor.run(RELEASE);
-            return;
-          }
+          // if (result.ID == trafficLightRedId) {
+          //   driveBrake();
+          //   return;
+          // } else if (result.ID == roundaboutId) {
+          //   roundabout();
+          // }
       }    
   }
 
   int distance = get_distance_sonic();
-  if (distance <= 20) {
-    // Stopt voertuig
-    leftFrontMotor.setSpeed(motorSpeedBrake);
-    leftFrontMotor.run(RELEASE);
-    leftBackMotor.setSpeed(motorSpeedBrake);
-    leftBackMotor.run(RELEASE);
-    rightFrontMotor.setSpeed(motorSpeedBrake);
-    rightFrontMotor.run(RELEASE);
-    rightBackMotor.setSpeed(motorSpeedBrake);
-    rightBackMotor.run(RELEASE); 
+  if (distance <= 5) {
+    driveRoundabout();
+  } else if (distance <= 20) {
+    driveBrake();
   } else {
-    // Auto laten rijden
-    leftFrontMotor.setSpeed(motorSpeedForward);
-    leftFrontMotor.run(FORWARD);
-    leftBackMotor.setSpeed(motorSpeedForward);
-    leftBackMotor.run(FORWARD);
-    rightFrontMotor.setSpeed(motorSpeedForward);
-    rightFrontMotor.run(FORWARD);
-    rightBackMotor.setSpeed(motorSpeedForward);
-    rightBackMotor.run(FORWARD);
+    driveForward();
   }
 }
 
@@ -98,4 +84,61 @@ int get_distance_sonic(){
 
 
   return distance;
+}
+
+void driveForward() {
+  // Auto vooruit laten rijden
+  leftFrontMotor.setSpeed(motorSpeedForward);
+  leftFrontMotor.run(FORWARD);
+  leftBackMotor.setSpeed(motorSpeedForward);
+  leftBackMotor.run(FORWARD);
+  rightFrontMotor.setSpeed(motorSpeedForward);
+  rightFrontMotor.run(FORWARD);
+  rightBackMotor.setSpeed(motorSpeedForward);
+  rightBackMotor.run(FORWARD);
+}
+
+void driveBrake() {
+  // Stopt voertuig
+  leftFrontMotor.setSpeed(motorSpeedBrake);
+  leftFrontMotor.run(RELEASE);
+  leftBackMotor.setSpeed(motorSpeedBrake);
+  leftBackMotor.run(RELEASE);
+  rightFrontMotor.setSpeed(motorSpeedBrake);
+  rightFrontMotor.run(RELEASE);
+  rightBackMotor.setSpeed(motorSpeedBrake);
+  rightBackMotor.run(RELEASE);
+}
+
+void driveTurnRight() {
+  // Maakt dat voertuig naar links gaat
+  leftFrontMotor.setSpeed(motorSpeedForward);
+  leftFrontMotor.run(FORWARD);
+  leftBackMotor.setSpeed(motorSpeedForward);
+  leftBackMotor.run(FORWARD);
+  rightFrontMotor.setSpeed(motorSpeedBrake);
+  rightFrontMotor.run(RELEASE);
+  rightBackMotor.setSpeed(motorSpeedBrake);
+  rightBackMotor.run(RELEASE);
+}
+
+void driveTurnLeft() {
+  // Maakt dat voertuig naar links gaat
+  leftFrontMotor.setSpeed(motorSpeedBrake);
+  leftFrontMotor.run(RELEASE);
+  leftBackMotor.setSpeed(motorSpeedBrake);
+  leftBackMotor.run(RELEASE);
+  rightFrontMotor.setSpeed(motorSpeedForward);
+  rightFrontMotor.run(FORWARD);
+  rightBackMotor.setSpeed(motorSpeedForward);
+  rightBackMotor.run(FORWARD);
+}
+
+void driveRoundabout() {
+  driveForward();
+  delay(2500);
+  driveTurnRight();
+  delay(3500);
+  driveTurnLeft();
+  delay(2500);
 }
